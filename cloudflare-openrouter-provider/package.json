@@ -1,0 +1,15 @@
+{
+  "name": "cloudflare-openrouter-provider",
+  "version": "1.0.0",
+  "description": "Cloudflare AI Gateway (OpenRouter) provider extension for pi - access OpenRouter models via Cloudflare AI Gateway",
+  "keywords": ["pi-package", "pi-provider", "cloudflare", "openrouter", "ai-gateway"],
+  "author": "",
+  "license": "MIT",
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-ai": "*"
+  }
+}

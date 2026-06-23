@@ -7,6 +7,7 @@ Collection of extensions for [pi](https://github.com/earendil-works/pi-coding-ag
 | Extension | Description |
 |-----------|-------------|
 | [dashscope-provider](./dashscope-provider) | Alibaba Cloud DashScope (阿里云百炼) provider — Qwen3.7 Max/Plus |
+| [cloudflare-openrouter-provider](./cloudflare-openrouter-provider) | Cloudflare AI Gateway → OpenRouter — access all OpenRouter models via CF AI Gateway |
 
 ## Installation
 

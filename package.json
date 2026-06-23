@@ -6,6 +6,6 @@
   "author": "novart",
   "license": "MIT",
   "pi": {
-    "extensions": ["dashscope-provider"]
+    "extensions": ["dashscope-provider", "cloudflare-openrouter-provider"]
   }
 }
