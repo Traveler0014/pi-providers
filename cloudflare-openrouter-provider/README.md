@@ -35,22 +35,19 @@
 ### Environment Variables (required)
 
 ```bash
-export CLOUDFLARE_API_KEY="your-api-token"        # dash.cloudflare.com → My Profile → API Tokens
 export CLOUDFLARE_ACCOUNT_ID="your-account-id"    # dashboard overview page
 export CLOUDFLARE_GATEWAY_ID="your-gateway-slug"  # AI → AI Gateway
 ```
 
-### Option A: `/login` command (for API key storage)
+### API Key Configuration
+
+Use `/login` to store your Cloudflare API token:
 
 ```
 /login → "Use an API key" → Cloudflare AI Gateway (OpenRouter) → paste token
 ```
 
-Key is stored in `~/.pi/agent/auth.json`. Note: `CLOUDFLARE_API_KEY` env var is still needed for the gateway auth header (`cf-aig-authorization`).
-
-### Option B: Environment variables only
-
-If all three env vars are set, `/login` is not required.
+Key is stored in `~/.pi/agent/auth.json`.
 
 ## Usage
 
@@ -64,8 +61,8 @@ pi --provider cloudflare-openrouter --model "anthropic/claude-opus-4.6"
 
 ## Auth Details
 
-- **Gateway auth:** `cf-aig-authorization: Bearer <cloudflare-api-token>` (from env var)
-- **Base URL:** `https://gateway.ai.cloudflare.com/v1/{account}/{gateway}/openai/v1`
+- **Gateway auth:** `Authorization: Bearer <cloudflare-api-token>` (standard Bearer auth)
+- **Base URL:** `https://gateway.ai.cloudflare.com/v1/{account}/{gateway}/openrouter/v1`
 - **API format:** OpenAI Chat Completions compatible (OpenRouter passthrough)
 - **Thinking:** OpenRouter-style `reasoning: { effort }` for reasoning models
 

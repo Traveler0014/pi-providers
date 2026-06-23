@@ -9,10 +9,9 @@
  * 1. Create an AI Gateway at dash.cloudflare.com → AI → AI Gateway
  * 2. Add an OpenRouter upstream (Stored BYOK or Unified Billing)
  * 3. Set environment variables:
- *    export CLOUDFLARE_API_KEY="..."
  *    export CLOUDFLARE_ACCOUNT_ID="..."
  *    export CLOUDFLARE_GATEWAY_ID="..."
- * 4. Optionally use /login to store the API key in auth.json:
+ * 4. Use /login inside pi:
  *    /login → "Use an API key" → Cloudflare AI Gateway (OpenRouter)
  *
  * ## Usage
@@ -24,7 +23,7 @@
  *
  * - Base URL: https://gateway.ai.cloudflare.com/v1/{account}/{gateway}/openrouter/v1
  * - API format: OpenAI Chat Completions (OpenRouter passthrough)
- * - Gateway auth: cf-aig-authorization header (from CLOUDFLARE_API_KEY env var)
+ * - Gateway auth: Authorization: Bearer header (CF AI Gateway Stored BYOK mode)
  * - Model IDs: OpenRouter format (e.g., anthropic/claude-opus-4.6)
  */
 
@@ -215,10 +214,7 @@ export default function (pi: ExtensionAPI) {
     // Resolved from auth.json (via /login) or env var
     apiKey: "$CLOUDFLARE_API_KEY",
     api: "openai-completions",
-    // CF AI Gateway auth header — resolved from auth.json env or process.env
-    headers: {
-      "cf-aig-authorization": "Bearer $CLOUDFLARE_API_KEY",
-    },
+    authHeader: true,
 
     models: MODELS.map((m) => ({
       id: m.id,
@@ -230,22 +226,5 @@ export default function (pi: ExtensionAPI) {
       maxTokens: m.maxTokens,
       compat: m.reasoning ? REASONING_COMPAT : BASE_COMPAT,
     })),
-  });
-
-  // Sync CLOUDFLARE_API_KEY from auth.json key → env so headers can resolve it
-  pi.on("session_start", () => {
-    try {
-      const authPath = require("path").join(
-        process.env.HOME || require("os").homedir(),
-        ".pi", "agent", "auth.json"
-      );
-      const auth = JSON.parse(require("fs").readFileSync(authPath, "utf-8"));
-      const entry = auth["cloudflare-openrouter"];
-      if (entry?.key && !entry?.env?.CLOUDFLARE_API_KEY) {
-        entry.env = { ...entry.env, CLOUDFLARE_API_KEY: entry.key };
-        require("fs").writeFileSync(authPath, JSON.stringify(auth, null, 2));
-        require("fs").chmodSync(authPath, 0o600);
-      }
-    } catch {}
   });
 }
