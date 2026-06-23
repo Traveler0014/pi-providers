@@ -211,8 +211,6 @@ export default function (pi: ExtensionAPI) {
   pi.registerProvider("cloudflare-openrouter", {
     name: "Cloudflare AI Gateway (OpenRouter)",
     baseUrl: BASE_URL,
-    // Resolved from auth.json (via /login) or env var
-    apiKey: "$CLOUDFLARE_API_KEY",
     api: "openai-completions",
     authHeader: true,
 

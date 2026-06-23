@@ -6,21 +6,19 @@
 
 | Model | Context | Max Output | Image | Reasoning |
 |-------|---------|------------|-------|-----------|
-| `anthropic/claude-opus-4.6` | 200K | 64K | ✓ | ✓ |
-| `openai/gpt-5.5` | 128K | 16K | ✓ | ✗ |
-| `google/gemini-3.1-pro` | 128K | 16K | ✓ | ✓ |
-| `google/gemini-3.5-flash` | 128K | 16K | ✓ | ✓ |
-| `moonshotai/kimi-k2.5` | 128K | 16K | ✓ | ✗ |
-| `moonshotai/kimi-k2.6` | 128K | 16K | ✓ | ✗ |
-| `moonshotai/kimi-k2.7-code` | 128K | 16K | ✓ | ✓ |
-| `minimax/minimax-m2.7` | 128K | 16K | ✗ | ✗ |
-| `minimax/minimax-m3` | 128K | 16K | ✗ | ✗ |
-| `qwen/qwen3.7-plus` | 1M | 64K | ✓ | ✓ |
-| `qwen/qwen3.7-max` | 1M | 64K | ✗ | ✓ |
-| `z-ai/glm-5.1` | 200K | 64K | ✗ | ✓ |
+| `anthropic/claude-opus-4.6` | 1M | 128K | ✓ | ✓ |
+| `openai/gpt-5.5` | 1.05M | 128K | ✓ | ✓ |
+| `google/gemini-3.1-pro-preview` | 1M | 65.5K | ✓ | ✓ |
+| `google/gemini-3.5-flash` | 1M | 65.5K | ✓ | ✓ |
+| `moonshotai/kimi-k2.5` | 262K | 256K | ✓ | ✓ |
+| `moonshotai/kimi-k2.6` | 262K | 262K | ✓ | ✓ |
+| `moonshotai/kimi-k2.7-code` | 262K | 262K | ✓ | ✓ |
+| `minimax/minimax-m2.7` | 204K | 196K | ✗ | ✓ |
+| `minimax/minimax-m3` | 1M | 512K | ✓ | ✗ |
+| `qwen/qwen3.7-plus` | 1M | 65.5K | ✓ | ✓ |
+| `qwen/qwen3.7-max` | 1M | 65.5K | ✗ | ✓ |
+| `z-ai/glm-5.1` | 202K | 65.5K | ✗ | ✓ |
 | `z-ai/glm-5.2` | 1M | 1M | ✗ | ✓ |
-
-> Model parameters are placeholders. Update after configuring Cloudflare AI Gateway access.
 
 ## Prerequisites
 
