@@ -215,7 +215,7 @@ export default function (pi: ExtensionAPI) {
     // Resolved from auth.json (via /login) or env var
     apiKey: "$CLOUDFLARE_API_KEY",
     api: "openai-completions",
-    // CF AI Gateway requires cf-aig-authorization header (resolved from env var)
+    // CF AI Gateway auth header — resolved from auth.json env or process.env
     headers: {
       "cf-aig-authorization": "Bearer $CLOUDFLARE_API_KEY",
     },
@@ -230,5 +230,22 @@ export default function (pi: ExtensionAPI) {
       maxTokens: m.maxTokens,
       compat: m.reasoning ? REASONING_COMPAT : BASE_COMPAT,
     })),
+  });
+
+  // Sync CLOUDFLARE_API_KEY from auth.json key → env so headers can resolve it
+  pi.on("session_start", () => {
+    try {
+      const authPath = require("path").join(
+        process.env.HOME || require("os").homedir(),
+        ".pi", "agent", "auth.json"
+      );
+      const auth = JSON.parse(require("fs").readFileSync(authPath, "utf-8"));
+      const entry = auth["cloudflare-openrouter"];
+      if (entry?.key && !entry?.env?.CLOUDFLARE_API_KEY) {
+        entry.env = { ...entry.env, CLOUDFLARE_API_KEY: entry.key };
+        require("fs").writeFileSync(authPath, JSON.stringify(auth, null, 2));
+        require("fs").chmodSync(authPath, 0o600);
+      }
+    } catch {}
   });
 }
