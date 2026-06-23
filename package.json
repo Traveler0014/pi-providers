@@ -1,0 +1,11 @@
+{
+  "name": "pi-extensions",
+  "version": "1.0.0",
+  "description": "Collection of pi extensions",
+  "keywords": ["pi-package"],
+  "author": "novart",
+  "license": "MIT",
+  "pi": {
+    "extensions": ["dashscope-provider"]
+  }
+}
