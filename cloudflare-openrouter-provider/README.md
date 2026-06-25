@@ -93,10 +93,7 @@ The extension includes a curated set of models. To add more OpenRouter models, c
 
 ```bash
 # Via pi (recommended)
-pi install git@github.com:Traveler0014/pi-providers.git
-
-# One-click script
-curl -fsSL https://github.com/Traveler0014/pi-providers.git/raw/master/install.sh | bash
+pi install https://github.com/Traveler0014/pi-providers.git
 
 # Manual
 cp index.ts ~/.pi/agent/extensions/cloudflare-openrouter-provider.ts

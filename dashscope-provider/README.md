@@ -39,10 +39,7 @@ export DASHSCOPE_API_KEY="sk-..."
 
 ```bash
 # Via pi (recommended)
-pi install git@github.com:Traveler0014/pi-providers.git
-
-# One-click script
-curl -fsSL https://github.com/Traveler0014/pi-providers.git/raw/master/install.sh | bash
+pi install https://github.com/Traveler0014/pi-providers.git
 
 # Manual
 cp index.ts ~/.pi/agent/extensions/dashscope-provider.ts

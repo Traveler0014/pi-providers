@@ -1,11 +1,25 @@
 {
-  "name": "pi-extensions",
+  "name": "pi-providers",
   "version": "1.0.0",
   "description": "Collection of pi extensions",
-  "keywords": ["pi-package"],
+  "keywords": [
+    "pi-package"
+  ],
   "author": "novart",
   "license": "MIT",
+  "repository": "git@github.com:Traveler0014/pi-providers.git",
+  "installUrl": "https://github.com/Traveler0014/pi-providers.git",
+  "scripts": {
+    "update-docs": "tsx scripts/update-docs.ts"
+  },
   "pi": {
-    "extensions": ["dashscope-provider", "cloudflare-openrouter-provider"]
+    "extensions": [
+      "dashscope-provider",
+      "cloudflare-openrouter-provider"
+    ]
+  },
+  "devDependencies": {
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
   }
 }
