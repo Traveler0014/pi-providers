@@ -63,23 +63,26 @@ pi-providers/
 
 ### Step 2: 冒烟测试
 
-**目标**：确认插件不影响 pi 正常启动。
+使用 `pi -ne`（non-interactive 模式）加载插件并发送一条简单 prompt 验证：
 
 ```bash
-# 方式 1：直接加载测试
-pi -e ./<extension-name>/index.ts
+pi -ne -e . -p '<prompt>'
+```
 
-# 方式 2：复制到扩展目录测试
-cp <extension-name>/index.ts ~/.pi/agent/extensions/<extension-name>.ts
-pi
-# 验证 pi 正常启动，无报错
+- `-e .`：从当前仓库根目录加载，pi 自动从根 `package.json` 的 `pi.extensions` 中加载所有插件
+- `<prompt>`：一句简单任务，让 agent 触发插件注册的 Tool 即可（不需复杂交互）
+
+示例：
+
+```bash
+pi -ne -e . -p 'list available tools'
 ```
 
 检查项：
-- [ ] pi 能正常启动，无崩溃或挂起
-- [ ] `/model` 能看到新注册的 provider 和模型（如适用）
-- [ ] `/login` 流程正常（如适用）
-- [ ] 注册的命令/工具可正常调用（如适用）
+- [ ] pi 正常启动，无崩溃
+- [ ] agent 正常响应用户，无异常日志
+- [ ] 注册的 Tool 被正确识别（可从 model 的 tool list 确认）
+- [ ] Provider 类插件：模型列表中可见新模型，`/login` 流程正常
 
 ### Step 3: 补全文档
 
@@ -157,10 +160,11 @@ git push origin --tags
 ## Tag 命名规范
 
 ```
-<extension-name>@<semver>
+<extension-path>@<semver>
 ```
 
-示例：
+`<extension-path>` 即根 `package.json` 中 `pi.extensions` 里声明的相对路径，与 `release.sh` 的第一个参数一致：
+
 - `dashscope-provider@1.1.0`
 - `cloudflare-openrouter-provider@2.0.0`
 
