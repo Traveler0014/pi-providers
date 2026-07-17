@@ -1,0 +1,15 @@
+{
+  "name": "kimi-provider",
+  "version": "1.0.0",
+  "description": "Kimi (Moonshot AI / 月之暗面) provider extension for pi - runtime model discovery on the OpenAI-compatible endpoint",
+  "keywords": ["pi-package", "pi-provider", "kimi", "moonshot", "moonshotai", "kimi-k3", "kimi-k2"],
+  "author": "",
+  "license": "MIT",
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-ai": "*"
+  }
+}

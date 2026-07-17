@@ -11,6 +11,7 @@ Collection of pi extensions
 |-----------|-----------|----------|-------|
 | [cloudflare-openrouter-provider](./cloudflare-openrouter-provider) | `cloudflare-openrouter` | — | — |
 | [dashscope-provider](./dashscope-provider) | `dashscope` | — | — |
+| [kimi-provider](./kimi-provider) | `kimi` | — | — |
 | [zhipu-provider](./zhipu-provider) | `zhipu` | — | — |
 
 ### [cloudflare-openrouter-provider](./cloudflare-openrouter-provider)
@@ -62,6 +63,14 @@ Collection of pi extensions
 | `qwen3.7-plus-2026-05-26` | 1.01M | 66K | ✓ | ✓ |
 
 </details>
+
+---
+
+### [kimi-provider](./kimi-provider)
+
+[Kimi (Moonshot AI / 月之暗面)](https://platform.kimi.com/) provider for pi — Kimi K3 / K2.7 Code / K2.6 models via the OpenAI-compatible API, with runtime model discovery.
+
+**Provider:** Kimi (Moonshot AI) (`kimi`)
 
 ---
 

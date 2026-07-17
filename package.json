@@ -16,7 +16,8 @@
     "extensions": [
       "dashscope-provider",
       "cloudflare-openrouter-provider",
-      "zhipu-provider"
+      "zhipu-provider",
+      "kimi-provider"
     ]
   },
   "devDependencies": {
