@@ -1,6 +1,6 @@
 {
   "name": "zhipu-provider",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Zhipu (智谱AI / BigModel) provider extension for pi - runtime model discovery on the general endpoint",
   "keywords": [
     "pi-package",
