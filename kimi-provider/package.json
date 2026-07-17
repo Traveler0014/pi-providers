@@ -1,6 +1,6 @@
 {
   "name": "kimi-provider",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Kimi (Moonshot AI / 月之暗面) provider extension for pi - runtime model discovery on the OpenAI-compatible endpoint",
   "keywords": [
     "pi-package",
