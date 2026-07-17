@@ -54,6 +54,8 @@ export MOONSHOT_API_KEY="..."
 ```
 
 > Backward compat: if `KIMI_API_KEY` is unset, the provider falls back to `MOONSHOT_API_KEY`, then to the legacy `moonshotai-cn` / `moonshotai` auth entries, so users upgrading from the built-in providers keep working.
+>
+> Note: the fallback key is passed to pi directly as a literal value — the extension never exports `KIMI_API_KEY` into the process environment, so pi's built-in `kimi-coding` provider (which activates on that env var) stays inactive unless you export the variable yourself.
 
 ## Usage
 

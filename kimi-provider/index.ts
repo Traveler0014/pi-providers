@@ -312,9 +312,14 @@ function baseCompat(profile?: ModelProfile): Record<string, unknown> {
  *   2. MOONSHOT_API_KEY env var (shared with the built-in moonshotai providers)
  *   3. ~/.pi/agent/auth.json entries: kimi, moonshotai-cn, moonshotai
  *
- * The registered provider uses `apiKey: "$KIMI_API_KEY"`; at startup we seed
- * KIMI_API_KEY from the fallbacks (step 2/3) so request-time resolution works
- * without a re-/login.
+ * The resolved key is passed to pi as a literal `apiKey` config value. We
+ * deliberately do NOT seed `process.env.KIMI_API_KEY`: pi's built-in
+ * `kimi-coding` provider activates on that env var, so exporting it would
+ * make an unwanted provider appear. (When the user explicitly exports
+ * KIMI_API_KEY themselves we keep the `$KIMI_API_KEY` reference instead.)
+ *
+ * Note: pi prefers a stored auth.json credential for provider `kimi` over
+ * this static `apiKey`, so /login keeps working regardless.
  */
 function resolveApiKey(): string {
   if (process.env.KIMI_API_KEY) return process.env.KIMI_API_KEY;
@@ -477,11 +482,21 @@ function writeCache(models: ModelConfig[]): void {
 
 // ── Extension entry ──────────────────────────────────────────────────────────
 
-function register(pi: ExtensionAPI, baseUrl: string, models: ModelConfig[]): void {
+/**
+ * Wrap a resolved key as a literal pi config value. pi's config-value parser
+ * treats `$VAR`/`${VAR}` as env references and `$$` as an escaped literal
+ * `$`, so a key starting with `$` must be escaped. (Kimi keys are `sk-...`,
+ * but guard anyway.)
+ */
+function asLiteralConfigValue(key: string): string {
+  return key.startsWith("$") ? `$${key}` : key;
+}
+
+function register(pi: ExtensionAPI, baseUrl: string, apiKey: string, models: ModelConfig[]): void {
   pi.registerProvider("kimi", {
     name: "Kimi (Moonshot AI)",
     baseUrl,
-    apiKey: API_KEY_REF,
+    apiKey,
     api: "openai-completions",
     authHeader: true,
     models,
@@ -489,13 +504,15 @@ function register(pi: ExtensionAPI, baseUrl: string, models: ModelConfig[]): voi
 }
 
 export default async function (pi: ExtensionAPI) {
-  // Migration: seed KIMI_API_KEY from MOONSHOT_API_KEY / legacy auth entries so
-  // the provider's `apiKey: "$KIMI_API_KEY"` resolves at request time without
-  // requiring users to re-/login.
-  if (!process.env.KIMI_API_KEY) {
-    const legacy = resolveApiKey();
-    if (legacy) process.env.KIMI_API_KEY = legacy;
-  }
+  // Resolve the API key WITHOUT seeding process.env.KIMI_API_KEY — exporting
+  // that var would also activate pi's built-in `kimi-coding` provider. If the
+  // user explicitly exported KIMI_API_KEY, keep the request-time `$KIMI_API_KEY`
+  // reference; otherwise pass the key resolved from MOONSHOT_API_KEY /
+  // auth.json as a literal. A stored auth.json credential for `kimi` takes
+  // precedence over this static value at request time either way.
+  const apiKey = process.env.KIMI_API_KEY
+    ? API_KEY_REF
+    : asLiteralConfigValue(resolveApiKey()) || API_KEY_REF;
 
   const config = loadConfig();
   const enabled = discoveryEnabled();
@@ -507,7 +524,7 @@ export default async function (pi: ExtensionAPI) {
   if (cached) {
     models = cached;
     source = `cache (${models.length} models)`;
-    register(pi, config.baseUrl, models);
+    register(pi, config.baseUrl, apiKey, models);
 
     if (enabled) {
       // Warm cache: refresh in the background and update the cache file so the
@@ -531,11 +548,11 @@ export default async function (pi: ExtensionAPI) {
       models = FALLBACK_MODELS;
       source = `fallback (${models.length} models) — ${e instanceof Error ? e.message : String(e)}`;
     }
-    register(pi, config.baseUrl, models);
+    register(pi, config.baseUrl, apiKey, models);
   } else {
     models = FALLBACK_MODELS;
     source = `fallback (${models.length} models) (discovery off)`;
-    register(pi, config.baseUrl, models);
+    register(pi, config.baseUrl, apiKey, models);
   }
 
   pi.on("session_start", () => {
