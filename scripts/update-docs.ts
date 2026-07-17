@@ -177,31 +177,40 @@ function getRegisterMethod(
 
 // ── Extractors ───────────────────────────────────────────────────────────────
 
-/** Extract models from a top-level `const MODELS = [...]` array */
+/**
+ * Extract models from a top-level static array. Recognizes both `MODELS`
+ * (static providers) and `FALLBACK_MODELS` (dynamic-discovery providers,
+ * which register the live list at runtime but keep a static snapshot for
+ * docs/fallback). `MODELS` takes precedence when both exist.
+ */
 function extractModelsArray(sourceFile: ts.SourceFile): ModelInfo[] {
-  const models: ModelInfo[] = [];
+  const byName: Record<string, ModelInfo[]> = {};
+  const NAMES = ["MODELS", "FALLBACK_MODELS"];
 
   for (const stmt of sourceFile.statements) {
     if (!ts.isVariableStatement(stmt)) continue;
 
     for (const decl of stmt.declarationList.declarations) {
       if (
-        ts.isIdentifier(decl.name) &&
-        decl.name.text === "MODELS" &&
-        decl.initializer &&
-        ts.isArrayLiteralExpression(decl.initializer)
+        !ts.isIdentifier(decl.name) ||
+        !NAMES.includes(decl.name.text) ||
+        !decl.initializer ||
+        !ts.isArrayLiteralExpression(decl.initializer)
       ) {
-        for (const el of decl.initializer.elements) {
-          if (ts.isObjectLiteralExpression(el)) {
-            const model = extractModelInfo(el);
-            if (model) models.push(model);
-          }
+        continue;
+      }
+      const collected: ModelInfo[] = [];
+      for (const el of decl.initializer.elements) {
+        if (ts.isObjectLiteralExpression(el)) {
+          const model = extractModelInfo(el);
+          if (model) collected.push(model);
         }
       }
+      byName[decl.name.text] = collected;
     }
   }
 
-  return models;
+  return byName.MODELS ?? byName.FALLBACK_MODELS ?? [];
 }
 
 function extractModelInfo(obj: ts.ObjectLiteralExpression): ModelInfo | undefined {
@@ -341,8 +350,16 @@ function parseExtension(extDir: string): ExtensionInfo | undefined {
       if (method) {
         switch (method) {
           case "registerProvider": {
+            // Dynamic-discovery providers call registerProvider multiple
+            // times (cache path, live path, background refresh). Keep only
+            // the first occurrence per provider id so the catalog is stable.
             const provider = extractProvider(node, modelsArray);
-            if (provider) info.providers.push(provider);
+            if (
+              provider &&
+              !info.providers.some((p) => p.id === provider.id)
+            ) {
+              info.providers.push(provider);
+            }
             break;
           }
           case "registerCommand": {

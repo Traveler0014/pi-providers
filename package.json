@@ -15,7 +15,8 @@
   "pi": {
     "extensions": [
       "dashscope-provider",
-      "cloudflare-openrouter-provider"
+      "cloudflare-openrouter-provider",
+      "zhipu-provider"
     ]
   },
   "devDependencies": {

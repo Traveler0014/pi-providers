@@ -11,6 +11,7 @@ Collection of pi extensions
 |-----------|-----------|----------|-------|
 | [cloudflare-openrouter-provider](./cloudflare-openrouter-provider) | `cloudflare-openrouter` | — | — |
 | [dashscope-provider](./dashscope-provider) | `dashscope` | — | — |
+| [zhipu-provider](./zhipu-provider) | `zhipu` | — | — |
 
 ### [cloudflare-openrouter-provider](./cloudflare-openrouter-provider)
 
@@ -48,14 +49,27 @@ Collection of pi extensions
 **Provider:** DashScope (阿里云百炼) (`dashscope`)
 
 <details>
-<summary>Models (2)</summary>
+<summary>Models (7)</summary>
 
 | Model | Context | Max Output | Image | Reasoning |
 |-------|---------|------------|-------|-----------|
 | `qwen3.7-max` | 1.01M | 66K | ✗ | ✓ |
+| `qwen3.7-max-2026-05-17` | 1.01M | 66K | ✗ | ✓ |
+| `qwen3.7-max-2026-05-20` | 1.01M | 66K | ✗ | ✓ |
+| `qwen3.7-max-2026-06-08` | 1.01M | 66K | ✗ | ✓ |
+| `qwen3.7-max-preview` | 1.01M | 66K | ✗ | ✓ |
 | `qwen3.7-plus` | 1.01M | 66K | ✓ | ✓ |
+| `qwen3.7-plus-2026-05-26` | 1.01M | 66K | ✓ | ✓ |
 
 </details>
+
+---
+
+### [zhipu-provider](./zhipu-provider)
+
+[Zhipu (智谱AI / BigModel)](https://bigmodel.cn/) provider for pi — GLM models via the OpenAI-compatible API on the **general** (non-coding) endpoint, with runtime model discovery.
+
+**Provider:** Zhipu (智谱) (`zhipu`)
 
 ---
 

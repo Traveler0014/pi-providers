@@ -1,7 +1,7 @@
 {
   "name": "dashscope-provider",
-  "version": "1.0.0",
-  "description": "DashScope (阿里云百炼) provider extension for pi - access Qwen and DeepSeek models via Alibaba Cloud",
+  "version": "1.1.0",
+  "description": "DashScope (阿里云百炼) provider extension for pi - runtime model discovery for Qwen3.7 via Alibaba Cloud",
   "keywords": ["pi-package", "pi-provider", "dashscope", "qwen", "alibaba-cloud"],
   "author": "",
   "license": "MIT",
