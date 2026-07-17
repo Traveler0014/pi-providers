@@ -1,12 +1,21 @@
 {
   "name": "zhipu-provider",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Zhipu (智谱AI / BigModel) provider extension for pi - runtime model discovery on the general endpoint",
-  "keywords": ["pi-package", "pi-provider", "zhipu", "glm", "bigmodel", "chatglm"],
+  "keywords": [
+    "pi-package",
+    "pi-provider",
+    "zhipu",
+    "glm",
+    "bigmodel",
+    "chatglm"
+  ],
   "author": "",
   "license": "MIT",
   "pi": {
-    "extensions": ["./index.ts"]
+    "extensions": [
+      "./index.ts"
+    ]
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
