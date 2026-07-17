@@ -134,10 +134,9 @@ function loadConfig(): ResolvedConfig {
       fileWarn = e instanceof Error ? e.message : String(e);
     }
   }
-  if (fileWarn) {
-    // stderr so we don't corrupt pi's TUI (which renders on stdout).
-    process.stderr.write(`[kimi] malformed ${CONFIG_FILENAME}, using defaults: ${fileWarn}\n`);
-  }
+  // Config-file warnings are intentionally silent: any terminal output
+  // (stdout *or* stderr) corrupts pi's TUI render. A malformed file simply
+  // falls back to defaults so pi still starts.
   const baseUrl = process.env.KIMI_BASE_URL || file.baseUrl || DEFAULT_BASE_URL;
   const inc = Array.isArray(file.include) ? file.include : DEFAULT_INCLUDE;
   const exc = Array.isArray(file.exclude) ? file.exclude : DEFAULT_EXCLUDE;
@@ -589,12 +588,10 @@ async function refreshInBackground(config: ResolvedConfig): Promise<void> {
     const live = await fetchLiveModels(config);
     const models = buildModelsFromLive(live);
     writeCache(models);
-    process.stderr.write(
-      `[kimi] background refresh: cached ${models.length} models (live) for next startup\n`,
-    );
+    // Silent: this runs as a fire-and-forget background task with no ctx,
+    // so any terminal output (stdout/stderr) would corrupt pi's TUI. The
+    // next session_start notify reflects the refreshed cache.
   } catch (e) {
-    process.stderr.write(
-      `[kimi] background refresh failed, keeping cache: ${e instanceof Error ? e.message : String(e)}\n`,
-    );
+    // Silent on failure: keep the existing cache (see note above).
   }
 }
