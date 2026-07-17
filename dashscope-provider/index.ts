@@ -140,7 +140,8 @@ function loadConfig(): ResolvedConfig {
     }
   }
   if (fileWarn) {
-    console.log(`[dashscope] malformed ${CONFIG_FILENAME}, using defaults: ${fileWarn}`);
+    // stderr so we don't corrupt pi's TUI (which renders on stdout).
+    process.stderr.write(`[dashscope] malformed ${CONFIG_FILENAME}, using defaults: ${fileWarn}\n`);
   }
   const baseUrl =
     process.env.DASHSCOPE_BASE_URL || file.baseUrl || DEFAULT_BASE_URL;
@@ -505,8 +506,8 @@ export default async function (pi: ExtensionAPI) {
     register(pi, config.baseUrl, models);
   }
 
-  pi.on("session_start", () => {
-    console.log(`[dashscope] model source: ${source}`);
+  pi.on("session_start", (_event, ctx) => {
+    ctx.ui.notify(`[dashscope] model source: ${source}`, "info");
   });
 
   // Fix: Ensure message sequence starts with "user" role.
@@ -545,10 +546,10 @@ async function refreshInBackground(config: ResolvedConfig): Promise<void> {
     const ids = await fetchLiveModelIds(config);
     const live = buildModelsFromLive(ids);
     writeCache(live);
-    console.log(`[dashscope] background refresh: cached ${live.length} models (live) for next startup`);
+    process.stderr.write(`[dashscope] background refresh: cached ${live.length} models (live) for next startup\n`);
   } catch (e) {
-    console.log(
-      `[dashscope] background refresh failed, keeping cache: ${e instanceof Error ? e.message : String(e)}`,
+    process.stderr.write(
+      `[dashscope] background refresh failed, keeping cache: ${e instanceof Error ? e.message : String(e)}\n`,
     );
   }
 }

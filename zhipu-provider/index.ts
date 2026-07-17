@@ -133,7 +133,8 @@ function loadConfig(): ResolvedConfig {
     }
   }
   if (fileWarn) {
-    console.log(`[zhipu] malformed ${CONFIG_FILENAME}, using defaults: ${fileWarn}`);
+    // stderr so we don't corrupt pi's TUI (which renders on stdout).
+    process.stderr.write(`[zhipu] malformed ${CONFIG_FILENAME}, using defaults: ${fileWarn}\n`);
   }
   const baseUrl =
     process.env.ZHIPU_BASE_URL || file.baseUrl || DEFAULT_BASE_URL;
@@ -480,8 +481,8 @@ export default async function (pi: ExtensionAPI) {
     register(pi, config.baseUrl, models);
   }
 
-  pi.on("session_start", () => {
-    console.log(`[zhipu] model source: ${source}`);
+  pi.on("session_start", (_event, ctx) => {
+    ctx.ui.notify(`[zhipu] model source: ${source}`, "info");
   });
 
   // Fix: Ensure message sequence starts with "user" role.
@@ -513,12 +514,12 @@ async function refreshInBackground(config: ResolvedConfig): Promise<void> {
     const discovered = buildModelsFromLive(ids);
     const live = mergeExtra(discovered, config);
     writeCache(live);
-    console.log(
-      `[zhipu] background refresh: cached ${discovered.length} discovered + ${live.length - discovered.length} extra (live) for next startup`,
+    process.stderr.write(
+      `[zhipu] background refresh: cached ${discovered.length} discovered + ${live.length - discovered.length} extra (live) for next startup\n`,
     );
   } catch (e) {
-    console.log(
-      `[zhipu] background refresh failed, keeping cache: ${e instanceof Error ? e.message : String(e)}`,
+    process.stderr.write(
+      `[zhipu] background refresh failed, keeping cache: ${e instanceof Error ? e.message : String(e)}\n`,
     );
   }
 }

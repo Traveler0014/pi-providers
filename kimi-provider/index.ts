@@ -135,7 +135,8 @@ function loadConfig(): ResolvedConfig {
     }
   }
   if (fileWarn) {
-    console.log(`[kimi] malformed ${CONFIG_FILENAME}, using defaults: ${fileWarn}`);
+    // stderr so we don't corrupt pi's TUI (which renders on stdout).
+    process.stderr.write(`[kimi] malformed ${CONFIG_FILENAME}, using defaults: ${fileWarn}\n`);
   }
   const baseUrl = process.env.KIMI_BASE_URL || file.baseUrl || DEFAULT_BASE_URL;
   const inc = Array.isArray(file.include) ? file.include : DEFAULT_INCLUDE;
@@ -555,8 +556,8 @@ export default async function (pi: ExtensionAPI) {
     register(pi, config.baseUrl, apiKey, models);
   }
 
-  pi.on("session_start", () => {
-    console.log(`[kimi] model source: ${source}`);
+  pi.on("session_start", (_event, ctx) => {
+    ctx.ui.notify(`[kimi] model source: ${source}`, "info");
   });
 
   // Fix: Ensure message sequence starts with a "user" role.
@@ -588,12 +589,12 @@ async function refreshInBackground(config: ResolvedConfig): Promise<void> {
     const live = await fetchLiveModels(config);
     const models = buildModelsFromLive(live);
     writeCache(models);
-    console.log(
-      `[kimi] background refresh: cached ${models.length} models (live) for next startup`,
+    process.stderr.write(
+      `[kimi] background refresh: cached ${models.length} models (live) for next startup\n`,
     );
   } catch (e) {
-    console.log(
-      `[kimi] background refresh failed, keeping cache: ${e instanceof Error ? e.message : String(e)}`,
+    process.stderr.write(
+      `[kimi] background refresh failed, keeping cache: ${e instanceof Error ? e.message : String(e)}\n`,
     );
   }
 }
