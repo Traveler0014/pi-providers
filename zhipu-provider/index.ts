@@ -23,10 +23,14 @@ import { join } from "node:path";
  * ## Discovery
  *
  * At startup the factory fetches the live model list from `/v1/models`.
- * BigModel's `/v1/models` returns ids only — no context window, max output,
- * pricing, or input modalities — so those come from PARAM_HEURISTICS /
- * INPUT_HEURISTICS / PROFILES below. A static EXTRA_MODELS table supplies
- * vision/free variants that the endpoint omits (see comment there).
+ * Verified 2026-08: the list and per-model detail endpoints (general and
+ * coding) return only `id`/`object`/`created`/`owned_by` — no context window,
+ * max output, pricing, or input modalities — so those come from the
+ * generation-matched heuristics below (same forward-compatible pattern as the
+ * openrouter provider's `^glm-[5-9]` include filter: glm-5.3 and future
+ * 5.x/6.x generations are covered without code changes). A static
+ * EXTRA_MODELS table supplies vision/free variants that the endpoint omits
+ * (see comment there).
  *
  * See the dashscope-provider for the full discovery pipeline description
  * (cache-first startup, background refresh, fallback); this provider uses
@@ -59,10 +63,11 @@ import { join } from "node:path";
  * Mirrors the built-in `zai` provider so request shaping is identical:
  * - `thinkingFormat: "zai"` → pi sends `thinking: { type: "enabled"|"disabled" }`
  *   (binary on/off; reasoning_effort only honored for models with
- *   `supportsReasoningEffort: true`, currently only glm-5.2).
+ *   `supportsReasoningEffort: true` — flagship glm-5.2/5.3, verified 2026-08
+ *   via a live reasoning_effort request).
  * - `zaiToolStream: true` (thinking models) → pi sends `tool_stream: true`.
  * - `supportsDeveloperRole: false` → uses `system`, not `developer`.
- * - `supportsReasoningEffort: false` for all but glm-5.2 (binary thinking).
+ * - `supportsReasoningEffort: false` for all but glm-5.2/5.3 (binary thinking).
  *
  * ## Setup
  *
@@ -171,14 +176,12 @@ interface ModelProfile {
   compat?: Record<string, unknown>;
 }
 
-const PROFILES: Record<string, ModelProfile> = {
-  // glm-5.2 is the only model supporting multi-level reasoning effort.
-  "glm-5.2": {
-    contextWindow: 1048576,
-    maxTokens: 131072,
-    compat: { supportsReasoningEffort: true },
-  },
-};
+// Per-model quirks the endpoint does not expose. Currently empty: the
+// flagship capabilities that used to live here (1M ctx, multi-level reasoning
+// effort for glm-5.2/5.3) are now generation-matched in PARAM_HEURISTICS and
+// REASONING_EFFORT below, so glm-5.3 and future 5.x/6.x releases are covered
+// without per-model entries. Add an entry here only for genuine one-off quirks.
+const PROFILES: Record<string, ModelProfile> = {};
 
 // Input-type heuristic — first match wins.
 const INPUT_HEURISTICS: [RegExp, InputType[]][] = [
@@ -194,11 +197,22 @@ function guessInput(id: string): InputType[] {
   return ["text"];
 }
 
-// Param heuristic — BigModel /v1/models exposes neither ctx nor pricing.
-// Values aligned with pi's built-in zai provider (verified against BigModel docs).
+// Param heuristic — BigModel /v1/models exposes neither ctx nor pricing
+// (verified 2026-08), so these come from generation-matched regexes: a new
+// flagship (glm-5.3, future 5.4/6.x) is picked up automatically, no per-model
+// edit needed. Values aligned with pi's built-in zai provider and the official
+// pricing page: glm-5.2 and glm-5.3 are both 1M ctx, ¥8/¥28 per million in/out,
+// ¥2 cache-hit (cache store currently free) — verified 2026-08. Cost stays 0 in
+// the model config (consistent with dashscope/kimi; CNY pricing not encoded).
 const PARAM_HEURISTICS: [RegExp, { ctx: number; max: number; costIn: number; costOut: number }][] = [
-  [/glm-5\.2/, { ctx: 1048576, max: 131072, costIn: 0, costOut: 0 }],
-  [/glm-5/, { ctx: 200000, max: 131072, costIn: 0, costOut: 0 }],
+  // NOTE: order matters — /glm-5/ also matches "glm-5.x" as a substring, so
+  // generation-specific entries must come before it.
+  // Flagship 5.2+ generations: 1M ctx (glm-5.2 raised the ceiling; 5.3 keeps it).
+  [/^glm-5\.[2-9]/, { ctx: 1048576, max: 131072, costIn: 0, costOut: 0 }],
+  // Future major generations (glm-6+): assume the flagship ceiling.
+  [/^glm-[6-9]/, { ctx: 1048576, max: 131072, costIn: 0, costOut: 0 }],
+  // glm-5 / glm-5.1 / glm-5-turbo / glm-5v-* → 200K.
+  [/^glm-5/, { ctx: 200000, max: 131072, costIn: 0, costOut: 0 }],
   [/glm-4\.7/, { ctx: 204800, max: 131072, costIn: 0, costOut: 0 }],
   [/glm-4\.6v/, { ctx: 131072, max: 32768, costIn: 0, costOut: 0 }],
   [/glm-4\.6/, { ctx: 204800, max: 131072, costIn: 0, costOut: 0 }],
@@ -232,17 +246,26 @@ function displayName(id: string): string {
 
 // ── Compat ───────────────────────────────────────────────────────────────────
 
+// Flagship generations supporting multi-level reasoning effort. Verified on
+// glm-5.2 (already enabled) and glm-5.3 (live reasoning_effort request
+// accepted, 2026-08); assumed to continue for future 5.2+/6+ generations.
+const REASONING_EFFORT = [/^glm-5\.[2-9]/, /^glm-[6-9]/];
+
+function supportsReasoningEffort(id: string): boolean {
+  return REASONING_EFFORT.some((re) => re.test(id));
+}
+
 /**
  * Base compat for all Zhipu models. Matches pi's built-in `zai` provider.
  * - supportsDeveloperRole: false — uses `system`.
  * - supportsStore: false.
- * - supportsReasoningEffort: false (overridden to true for glm-5.2).
+ * - supportsReasoningEffort: generation-matched (flagship 5.2+ / 6+).
  */
-function baseCompat(reasoning: boolean, profile?: ModelProfile): Record<string, unknown> {
+function baseCompat(id: string, reasoning: boolean, profile?: ModelProfile): Record<string, unknown> {
   const compat: Record<string, unknown> = {
     supportsStore: false,
     supportsDeveloperRole: false,
-    supportsReasoningEffort: false,
+    supportsReasoningEffort: supportsReasoningEffort(id),
     thinkingFormat: "zai",
   };
   // zaiToolStream applies to thinking models (matches built-in zai: glm-4.5-air
@@ -321,7 +344,7 @@ function buildModel(id: string): ModelConfig {
     },
     contextWindow: p.contextWindow ?? params.ctx,
     maxTokens: p.maxTokens ?? params.max,
-    compat: baseCompat(reasoning, p),
+    compat: baseCompat(id, reasoning, p),
   };
 }
 
@@ -375,6 +398,7 @@ const FALLBACK_MODELS: ModelConfig[] = mergeExtra(
     "glm-5-turbo",
     "glm-5.1",
     "glm-5.2",
+    "glm-5.3",
   ].map(buildModel),
   { include: [], exclude: [] },
 );
