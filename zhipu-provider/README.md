@@ -67,7 +67,12 @@ Get an API key at the [BigModel console](https://bigmodel.cn/usercenter/proj-mgm
 export ZHIPU_API_KEY="..."
 ```
 
-> Backward compat: if `ZHIPU_API_KEY` is unset and no `zhipu` auth entry exists, the provider falls back to the legacy `zai_china` auth entry, so users upgrading from the old `zai-china` extension keep working.
+> **Precedence (mirrors pi's own resolution)**: a `/login`-stored credential in
+> `~/.pi/agent/auth.json` wins over `ZHIPU_API_KEY` for both requests and model
+> discovery; the env var is the fallback. The provider never writes to
+> `process.env`, so a stale exported key can't shadow a refreshed auth.json.
+> Backward compat: if neither exists, the legacy `zai_china` auth entry is
+> used, so users upgrading from the old `zai-china` extension keep working.
 
 ## Usage
 

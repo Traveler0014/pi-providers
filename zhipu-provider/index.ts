@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { readStoredCredential, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -277,25 +277,26 @@ function baseCompat(id: string, reasoning: boolean, profile?: ModelProfile): Rec
 
 // ── API key resolution ───────────────────────────────────────────────────────
 
+/**
+ * Discovery-time API key lookup (the factory runs before pi injects auth into
+ * requests, so the /models fetch needs its own key).
+ *
+ * Mirrors pi's request-time precedence (see provider-composer: stored
+ * credential > configured `$VAR` env ref) and deliberately does NOT seed
+ * `process.env` — exporting a stale snapshot into pi's child processes is what
+ * caused the old `zai_china` migration key to shadow a refreshed auth.json.
+ * pi resolves `apiKey: "$ZHIPU_API_KEY"` itself per request; /login stored
+ * credentials already take precedence over that env ref.
+ */
 function resolveApiKey(): string {
-  if (process.env.ZHIPU_API_KEY) return process.env.ZHIPU_API_KEY;
-  // Fall back to the legacy zai_china auth entry so existing users keep working.
-  for (const key of ["zhipu", "zai_china"]) {
-    try {
-      const raw = readFileSync(join(homedir(), ".pi", "agent", "auth.json"), "utf8");
-      const data = JSON.parse(raw) as Record<string, unknown>;
-      const v = data[key];
-      if (typeof v === "string") return v;
-      if (v && typeof v === "object") {
-        const o = v as Record<string, unknown>;
-        if (typeof o.key === "string") return o.key;
-        if (typeof o.apiKey === "string") return o.apiKey;
-      }
-    } catch {
-      // ignore
-    }
-  }
-  return "";
+  // 1) /login stored credential for this provider (canonical; same as pi).
+  const stored = readStoredCredential("zhipu");
+  if (stored?.type === "api_key" && stored.key) return stored.key;
+  // 2) Legacy zai_china entry (pre-`zhipu` /login migration).
+  const legacy = readStoredCredential("zai_china");
+  if (legacy?.type === "api_key" && legacy.key) return legacy.key;
+  // 3) The $ZHIPU_API_KEY env reference (same fallback pi uses for requests).
+  return process.env.ZHIPU_API_KEY ?? "";
 }
 
 // ── Live discovery ───────────────────────────────────────────────────────────
@@ -454,14 +455,6 @@ function register(pi: ExtensionAPI, baseUrl: string, models: ModelConfig[]): voi
 }
 
 export default async function (pi: ExtensionAPI) {
-  // Migration: if ZHIPU_API_KEY is unset, seed it from the legacy `zai_china`
-  // auth entry (or `zhipu` entry) so the provider's `apiKey: "$ZHIPU_API_KEY"`
-  // resolves at request time without requiring users to re-/login.
-  if (!process.env.ZHIPU_API_KEY) {
-    const legacy = resolveApiKey();
-    if (legacy) process.env.ZHIPU_API_KEY = legacy;
-  }
-
   const config = loadConfig();
   const enabled = discoveryEnabled();
   const cached = readCache();
