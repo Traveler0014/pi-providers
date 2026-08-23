@@ -16,7 +16,7 @@ Collection of pi extensions
 
 ### [cloudflare-openrouter-provider](./cloudflare-openrouter-provider)
 
-[Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/) provider for pi — access [OpenRouter](https://openrouter.ai) models via Cloudflare AI Gateway's OpenAI passthrough.
+[Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/) provider for pi — access [OpenRouter](https://openrouter.ai) models via Cloudflare AI Gateway's OpenAI passthrough, with runtime model discovery.
 
 **Provider:** Cloudflare AI Gateway (OpenRouter) (`cloudflare-openrouter`)
 
