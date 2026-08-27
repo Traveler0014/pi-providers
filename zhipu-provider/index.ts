@@ -30,7 +30,9 @@ import { join } from "node:path";
  * openrouter provider's `^glm-[5-9]` include filter: glm-5.3 and future
  * 5.x/6.x generations are covered without code changes). A static
  * EXTRA_MODELS table supplies vision/free variants that the endpoint omits
- * (see comment there).
+ * (see comment there). Input modality is usually inferred from the id (a "v"
+ * prefix denotes vision), but a few multimodal models drop that convention
+ * (glm-5.3-flash) and are handled via a per-model PROFILES override.
  *
  * See the dashscope-provider for the full discovery pipeline description
  * (cache-first startup, background refresh, fallback); this provider uses
@@ -176,14 +178,28 @@ interface ModelProfile {
   compat?: Record<string, unknown>;
 }
 
-// Per-model quirks the endpoint does not expose. Currently empty: the
-// flagship capabilities that used to live here (1M ctx, multi-level reasoning
-// effort for glm-5.2/5.3) are now generation-matched in PARAM_HEURISTICS and
-// REASONING_EFFORT below, so glm-5.3 and future 5.x/6.x releases are covered
-// without per-model entries. Add an entry here only for genuine one-off quirks.
-const PROFILES: Record<string, ModelProfile> = {};
+// Per-model quirks the endpoint does not expose. Most flagship capabilities
+// (1M ctx, multi-level reasoning effort for glm-5.2/5.3) are generation-matched
+// in PARAM_HEURISTICS and REASONING_EFFORT below, so glm-5.3 and future 5.x/6.x
+// releases are covered without per-model entries. Add an entry here only for
+// genuine one-off quirks that break the generation-matched rules below.
+const PROFILES: Record<string, ModelProfile> = {
+  // glm-5.3-flash breaks both generation-matched heuristics: it is multimodal
+  // but has no "v" in its id (INPUT_HEURISTICS -> text-only), and it is a
+  // thinking model despite the "-flash" suffix (NON_REASONING -> non-reasoning).
+  // It is discovered live from /v1/models, so without an entry the model would
+  // reject image turns and never enable thinking. Verified 2026-08 via live
+  // requests: image input is accepted, reasoning_content is returned, and
+  // thinking: {type:"disabled"} is rejected with "this model always thinks".
+  "glm-5.3-flash": {
+    input: ["text", "image"],
+    reasoning: true,
+  },
+};
 
 // Input-type heuristic — first match wins.
+// NOTE: a few multimodal models carry no "v" (glm-5.3-flash) and are handled
+// via the PROFILES override above rather than a regex here.
 const INPUT_HEURISTICS: [RegExp, InputType[]][] = [
   [/glm-5v/, ["text", "image"]],
   [/glm-4\.6v/, ["text", "image"]],
@@ -231,6 +247,8 @@ function guessParams(id: string): { ctx: number; max: number; costIn: number; co
 // non-thinking text variants (air/flashx/flash-free). Vision-flash variants
 // (glm-4.6v-flash) DO support thinking, so exclude them from the non-reasoning
 // set by requiring a leading text-only context (no 'v' before the suffix).
+// NOTE: one -flash model (glm-5.3-flash) is a thinking model too and is handled
+// via the PROFILES override above.
 const NON_REASONING = [/air$/, /flashx$/, /flash-250414$/, /(?<!v)-flash$/];
 function guessReasoning(id: string): boolean {
   return !NON_REASONING.some((re) => re.test(id));
@@ -400,6 +418,7 @@ const FALLBACK_MODELS: ModelConfig[] = mergeExtra(
     "glm-5.1",
     "glm-5.2",
     "glm-5.3",
+    "glm-5.3-flash",
   ].map(buildModel),
   { include: [], exclude: [] },
 );

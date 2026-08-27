@@ -26,11 +26,12 @@ Provider id: `zhipu` (distinct from the built-ins, so all three can coexist).
 
 ## Models
 
-The list is discovered at runtime. The endpoint returns ~8 base text models; this extension additionally surfaces vision and free variants:
+The list is discovered at runtime. The endpoint returns the base text models; this extension additionally surfaces vision and free variants:
 
 | Model | Context | Max Output | Image | Reasoning | Notes |
 |-------|---------|------------|-------|-----------|-------|
 | `glm-5.3` | 1M | 128K | ✗ | ✓ | flagship; multi-level effort (verified) |
+| `glm-5.3-flash` | 1M | 128K | ✓ | ✓ | multimodal flash; always thinks (verified) |
 | `glm-5.2` | 1M | 128K | ✗ | ✓ | flagship; multi-level effort (verified) |
 | `glm-5.1` | 200K | 128K | ✗ | ✓ | |
 | `glm-5` | 200K | 128K | ✗ | ✓ | |
